@@ -28,7 +28,7 @@ routes:
     script: "./scripts/hello.sh"
     timeout: "10s"
     max_concurrency: 5
-    # busy_message / deny_message を省略するとデフォルト文字列が使われます
+    # busy_message / deny_message / error_message を省略するとデフォルト文字列が使われます
 
   # 以下はルート設定のサンプルです。
   # script に指定するファイルは実際に存在し、実行権限が必要です（起動時に検証されます）。
@@ -55,6 +55,7 @@ routes:
   #     - "U000000099"  # 一時的に制限したいユーザー
   #   busy_message: ":warning: デプロイは同時に1件しか実行できません。完了後に再度お試しください。"
   #   deny_message: ":no_entry: デプロイの実行権限がありません。#ops チャンネルで申請してください。"
+  #   error_message: ":x: デプロイの実行を開始できませんでした。管理者に連絡してください。"
 
   # タイムアウトを長めに取るバッチ処理（特定チャンネルから実行禁止）
   # - command: "/report"

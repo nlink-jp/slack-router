@@ -137,6 +137,7 @@ routes:
 | `routes[].max_concurrency` | | 無制限 | このコマンドの同時実行上限 |
 | `routes[].busy_message` | | デフォルト文字列 | ルート上限到達時にユーザーへ送るメッセージ |
 | `routes[].deny_message` | | デフォルト文字列 | ACL 拒否時にユーザーへ送るメッセージ |
+| `routes[].error_message` | | デフォルト文字列 | ワーカー起動失敗時にユーザーへ送るメッセージ |
 | `routes[].allow_channels` | | 無制限 | 実行を許可するチャンネル ID のリスト |
 | `routes[].allow_users` | | 無制限 | 実行を許可するユーザー ID のリスト |
 | `routes[].deny_channels` | | なし | 実行を拒否するチャンネル ID のリスト |
