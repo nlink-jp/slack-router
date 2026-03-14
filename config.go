@@ -168,7 +168,7 @@ func (c *Config) validate(configDir string) error {
 			r.DenyMessage = ":no_entry: このコマンドを実行する権限がありません。"
 		}
 		if r.ErrorMessage == "" {
-			r.ErrorMessage = ":x: コマンドの実行を開始できませんでした。しばらく待ってから再度お試しください。"
+			r.ErrorMessage = ":x: コマンドの実行中に予期しないエラーが発生しました。しばらく待ってから再度お試しください。"
 		}
 	}
 

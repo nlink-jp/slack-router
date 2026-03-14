@@ -158,6 +158,29 @@ func TestRunWorkerNoOutputWhenSilent(t *testing.T) {
 	}
 }
 
+func TestRunWorkerPositiveExitNoNotification(t *testing.T) {
+	dir := t.TempDir()
+	script := filepath.Join(dir, "fail.sh")
+	err := os.WriteFile(script, []byte("#!/bin/sh\nexit 1\n"), 0o755)
+	if err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	h := &captureHandler{}
+	old := slog.Default()
+	slog.SetDefault(slog.New(h))
+	t.Cleanup(func() { slog.SetDefault(old) })
+
+	runWorker(context.Background(), script, 5*time.Second, SlashEvent{
+		Command: "/test", UserID: "U001", ChannelID: "C001",
+	}, "system error")
+
+	// exit 1 is intentional — router must NOT send a notification.
+	if h.findLog("notifyEphemeral: skipping invalid response_url", "err", "") {
+		t.Error("router must not notify user on positive exit code (script should handle it)")
+	}
+}
+
 func TestRunWorkerStartFailureNotifiesUser(t *testing.T) {
 	h := &captureHandler{}
 	old := slog.Default()

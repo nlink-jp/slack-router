@@ -59,6 +59,21 @@ Do not add new files unless a clear responsibility boundary justifies it.
   and is not world-writable (`0002`). Do not relax these checks.
 - Script arguments must never come from Slack event data. Pass data via stdin JSON only.
 
+### Worker exit code convention
+The router uses `exec.ExitError.ExitCode()` to decide whether to send a user notification
+after a worker exits abnormally. Do not change this logic without updating both README and
+AGENTS.md.
+
+| ExitCode | Meaning | Router notifies user? |
+|---|---|---|
+| `0` | success | no |
+| `> 0` | script called `exit N` intentionally; script must have sent its own response | no |
+| `< 0` | killed by signal (OOM, external SIGKILL, etc.); script could not respond | **yes** |
+| startup failure | `cmd.Start` / stdin pipe / encode error | **yes** |
+
+Worker scripts **must** send a user-facing response via `response_url` before exiting with
+a non-zero code. If a script exits non-zero without responding, the user sees nothing.
+
 ### Path resolution
 - Relative script paths are resolved relative to the config file's directory, not CWD.
   This is done in `config.go:validate`. Always use `filepath.Abs` + `filepath.Clean`.

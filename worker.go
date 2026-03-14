@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -103,6 +104,16 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 		logOutput()
 		if err != nil {
 			slog.Error("worker abnormal exit", "pid", pid, "command", event.Command, "err", err)
+			// Notify the user only when the process was killed by a signal
+			// (ExitCode < 0). A positive exit code means the script called
+			// exit(N) intentionally and is expected to have already sent its
+			// own response via response_url. Signal termination (OOM killer,
+			// external SIGKILL, etc.) leaves the user with no response, so
+			// the router steps in.
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) && exitErr.ExitCode() < 0 {
+				notifyEphemeral(event.ResponseURL, errorMessage)
+			}
 		} else {
 			slog.Info("worker exited normally", "pid", pid, "command", event.Command)
 		}
