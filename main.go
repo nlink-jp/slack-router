@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/socketmode"
@@ -47,13 +48,18 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	startTime := time.Now()
+
 	slog.Info("slack-router starting",
 		"version", version,
 		"commit", commit,
 		"build_date", buildDate,
 		"routes", len(cfg.Routes),
 		"max_concurrent_workers", cfg.Global.MaxConcurrentWorkers,
+		"heartbeat_interval", cfg.Global.HeartbeatInterval.String(),
 	)
+
+	startHeartbeat(ctx, cfg.Global.HeartbeatInterval, startTime)
 
 	// Event dispatch loop.
 	go func() {
@@ -132,6 +138,27 @@ func handleEvent(ctx context.Context, client *socketmode.Client, router *Router,
 	default:
 		slog.Debug("unhandled event type", "type", evt.Type)
 	}
+}
+
+// startHeartbeat emits a periodic "heartbeat" log entry for health monitoring.
+// Log aggregation systems can alert when heartbeat stops appearing.
+// interval=0 disables heartbeat logging entirely.
+func startHeartbeat(ctx context.Context, interval time.Duration, startTime time.Time) {
+	if interval <= 0 {
+		return
+	}
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				slog.Info("heartbeat", "uptime", time.Since(startTime).Round(time.Second).String())
+			}
+		}
+	}()
 }
 
 func parseLogLevel(s string) slog.Level {

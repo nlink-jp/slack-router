@@ -15,6 +15,7 @@ slack:
 global:
   max_concurrent_workers: 10  # ルーター全体の同時実行上限
   log_level: "info"           # debug / info / warn / error
+  # heartbeat_interval: "1m"  # 死活監視用ハートビートログの間隔（省略時は 1m、0 で無効）
   messages:
     # グローバル同時実行数の上限に達したときにユーザーへ送るメッセージ
     # 省略するとデフォルト文字列が使われます

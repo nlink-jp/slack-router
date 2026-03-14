@@ -21,9 +21,13 @@ type SlackConfig struct {
 }
 
 type GlobalConfig struct {
-	MaxConcurrentWorkers int            `yaml:"max_concurrent_workers"`
-	LogLevel             string         `yaml:"log_level"`
-	Messages             GlobalMessages `yaml:"messages"`
+	MaxConcurrentWorkers    int            `yaml:"max_concurrent_workers"`
+	LogLevel                string         `yaml:"log_level"`
+	HeartbeatIntervalStr    string         `yaml:"heartbeat_interval"`
+	Messages                GlobalMessages `yaml:"messages"`
+
+	// HeartbeatInterval is parsed from HeartbeatIntervalStr. 0 disables heartbeat logging.
+	HeartbeatInterval time.Duration `yaml:"-"`
 }
 
 // GlobalMessages holds user-facing notification strings that apply server-wide.
@@ -104,6 +108,18 @@ func (c *Config) validate(configDir string) error {
 	}
 	if c.Global.Messages.ServerBusy == "" {
 		c.Global.Messages.ServerBusy = ":warning: サーバーが混み合っています。しばらく待ってから再度お試しください。"
+	}
+	if c.Global.HeartbeatIntervalStr != "" {
+		d, err := time.ParseDuration(c.Global.HeartbeatIntervalStr)
+		if err != nil {
+			return fmt.Errorf("global.heartbeat_interval: invalid duration %q: %w", c.Global.HeartbeatIntervalStr, err)
+		}
+		if d < 0 {
+			return fmt.Errorf("global.heartbeat_interval must be >= 0")
+		}
+		c.Global.HeartbeatInterval = d
+	} else {
+		c.Global.HeartbeatInterval = 1 * time.Minute
 	}
 
 	seen := make(map[string]struct{})

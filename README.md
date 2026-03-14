@@ -130,6 +130,7 @@ routes:
 | `slack.bot_token` / `SLACK_BOT_TOKEN` | ✓ | — | `xoxb-` から始まる Bot Token |
 | `global.max_concurrent_workers` | | `10` | 全コマンド合計の同時実行上限 |
 | `global.log_level` | | `info` | `debug` / `info` / `warn` / `error` |
+| `global.heartbeat_interval` | | `1m` | 死活監視用ハートビートログの間隔（`0` で無効） |
 | `global.messages.server_busy` | | デフォルト文字列 | グローバル上限到達時のメッセージ |
 | `routes[].command` | ✓ | — | Slash Command 名（例: `/ask`） |
 | `routes[].script` | ✓ | — | 実行するスクリプトのパス（相対パスは config ファイル基準） |
