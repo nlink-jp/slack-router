@@ -45,6 +45,13 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 	// Workers receive all other env vars (PATH, HOME, …) unchanged.
 	cmd.Env = sanitizedEnv()
 
+	// Capture stdout and stderr so worker output appears in the router's
+	// structured log. Without this, output would be silently discarded when
+	// the process runs as a daemon (no controlling terminal).
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		slog.Error("worker: stdin pipe failed", "command", event.Command, "script", script, "err", err)
@@ -76,8 +83,21 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
 
+	// logOutput emits any captured stdout/stderr to the structured log.
+	// Call this after <-done confirms the process has exited and all output
+	// has been flushed to the buffers.
+	logOutput := func() {
+		if out := strings.TrimSpace(stdoutBuf.String()); out != "" {
+			slog.Info("worker stdout", "pid", pid, "command", event.Command, "output", out)
+		}
+		if out := strings.TrimSpace(stderrBuf.String()); out != "" {
+			slog.Warn("worker stderr", "pid", pid, "command", event.Command, "output", out)
+		}
+	}
+
 	select {
 	case err := <-done:
+		logOutput()
 		if err != nil {
 			slog.Error("worker abnormal exit", "pid", pid, "command", event.Command, "err", err)
 		} else {
@@ -95,11 +115,13 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 
 		select {
 		case <-done:
+			logOutput()
 			slog.Info("worker: exited after SIGTERM", "pid", pid)
 		case <-time.After(5 * time.Second):
 			slog.Warn("worker: sending SIGKILL", "pid", pid)
 			_ = syscall.Kill(-pid, syscall.SIGKILL)
 			<-done
+			logOutput()
 			slog.Warn("worker: killed", "pid", pid)
 		}
 	}
