@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-03-14
+
+### Added
+
+- **ワーカー異常終了時の通知規約（exit code による振り分け）** — `exec.ExitError.ExitCode()` の値でルーターの通知有無を制御。`exit 1` 等の正の終了コードはスクリプトが意図的に終了したとみなし通知しない（スクリプト自身が `response_url` で返信済みと期待）。シグナルによる強制終了（OOM killer・外部 SIGKILL 等）は `ExitCode < 0` となり、ルーターが `error_message` を送信
+
+### Changed
+
+- **`error_message` のデフォルト文字列を汎用表現に変更** — 起動失敗・シグナル終了どちらにも対応できる「予期しないエラーが発生しました」に統一
+
+### Documentation
+
+- README にエラー時の通知規約テーブルとスクリプト実装規約を追記
+- AGENTS.md に exit code 規約と通知ロジックを追記
+
 ## [0.1.4] - 2026-03-14
 
 ### Added
@@ -67,7 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ビルド時バージョン埋め込み** — `git describe --tags` の結果を `-ldflags` でバイナリに埋め込み
 - **サンプルスクリプト** — `scripts/hello.sh`（挨拶スクリプト）を同梱
 
-[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/magifd2/slack-router/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/magifd2/slack-router/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/magifd2/slack-router/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/magifd2/slack-router/compare/v0.1.1...v0.1.2
