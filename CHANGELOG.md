@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-22
+
+### Changed
+
+- **Darwin releases are now Developer ID signed and Apple-notarized.**
+  `slack-router-v0.2.1-darwin-{amd64,arm64}.zip` carry full Apple
+  Developer ID Application signatures and notarization tickets from
+  Apple. End users on macOS no longer need to bypass Gatekeeper
+  with right-click → Open or `xattr -d com.apple.quarantine` on
+  first launch; local users who place `slack-router` under
+  Dropbox-synced (or any other FileProvider-managed) paths are no
+  longer killed by macOS's ad-hoc + provenance distrust policy.
+  Pipeline: `build-tools/codesign-darwin.sh` +
+  `build-tools/notarize-darwin.sh`, driven by `make release`.
+  Adopts the org-wide convention in `nlink-jp/.github`
+  CONVENTIONS.md §Code Signing.
+
+### Internal
+
+- **Build-time helpers live in `build-tools/`, not `scripts/`.**
+  slack-router is the org's only project that bundles `scripts/`
+  into the release zip (the routed command samples ship there).
+  Putting codesign/notarize under `scripts/` would either pollute
+  the distribution or require fragile by-name filtering of
+  `BUNDLE_FILES`. Locating them under `build-tools/` keeps the
+  release artifact pure without any inclusion-list maintenance.
+
+No behaviour change to the binary itself — feature-wise this is
+identical to v0.2.0.
+
 ## [0.2.0] - 2026-03-28
 
 ### Changed
