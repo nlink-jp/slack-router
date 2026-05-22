@@ -10,8 +10,20 @@ LDFLAGS := -X main.version=$(VERSION) \
 
 GO_BUILD := go build -trimpath -ldflags "$(LDFLAGS)"
 
+# macOS Developer ID signing / notarization. See nlink-jp/.github
+# CONVENTIONS.md §Code Signing. slack-router is the org's only
+# project that bundles scripts/ into the release zip (the routed
+# command samples live there), so build-time helpers live in
+# build-tools/ instead of scripts/ to keep them out of the
+# distribution. Both files are verbatim copies of the templates
+# in nlink-jp/.github/templates/.
+CODESIGN_IDENTITY ?= Developer ID Application
+NOTARY_PROFILE    ?= nlink-jp-notary
+
 # Files bundled into each release zip alongside the binary.
 # Adjust this list if you add more files worth shipping.
+# build-tools/ is intentionally NOT here — it holds the
+# codesign/notarize helpers, which are build-time only.
 BUNDLE_FILES := README.md CHANGELOG.md config.example.yaml .env.example docs scripts
 
 PLATFORMS := \
@@ -28,9 +40,10 @@ PLATFORMS := \
 build: ## Build for the current platform
 	@mkdir -p dist
 	$(GO_BUILD) -o dist/$(BINARY) .
+	@build-tools/codesign-darwin.sh dist/$(BINARY) "$(CODESIGN_IDENTITY)"
 
 .PHONY: release
-release: ## Cross-compile for all platforms and package into zip archives → dist/
+release: ## Cross-compile for all platforms, sign, package, notarize darwin → dist/
 	@mkdir -p dist
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d/ -f1); \
@@ -42,11 +55,14 @@ release: ## Cross-compile for all platforms and package into zip archives → di
 		mkdir -p "$$stagedir"; \
 		GOOS=$$os GOARCH=$$arch $(GO_BUILD) -o "$$stagedir/$(BINARY)" . \
 			|| { echo "FAILED"; rm -rf "$$stagedir"; exit 1; }; \
+		build-tools/codesign-darwin.sh "$$stagedir/$(BINARY)" "$(CODESIGN_IDENTITY)" || true; \
 		cp -r $(BUNDLE_FILES) "$$stagedir/"; \
 		cd dist && zip -qr "$$name.zip" "$$name/" && cd ..; \
 		rm -rf "$$stagedir"; \
 		echo "ok  →  $$zipfile"; \
 	done
+	@build-tools/notarize-darwin.sh dist/$(BINARY)-$(VERSION)-darwin-amd64.zip "$(NOTARY_PROFILE)"
+	@build-tools/notarize-darwin.sh dist/$(BINARY)-$(VERSION)-darwin-arm64.zip "$(NOTARY_PROFILE)"
 	@echo ""
 	@echo "Artifacts:"
 	@ls -lh dist/*.zip
