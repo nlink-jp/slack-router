@@ -158,7 +158,7 @@ A sample script is provided at [`scripts/hello.sh`](scripts/hello.sh). See the J
 
 ```bash
 make build    # Current platform → ./slack-router
-make package  # All platforms (macOS/Linux amd64/arm64) → dist/
+make package  # All platforms (macOS arm64, Linux amd64/arm64) → dist/
 make test     # go test -race ./...
 make lint     # go vet + staticcheck
 make clean    # Remove binary and dist/

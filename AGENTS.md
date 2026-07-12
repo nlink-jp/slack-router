@@ -115,7 +115,7 @@ make release  # cross-compile + zip → dist/
 ```
 
 ### Supported platforms
-- `darwin/amd64`, `darwin/arm64`
+- `darwin/arm64` (macOS ships arm64 only; Intel builds from source)
 - `linux/amd64`, `linux/arm64`
 
 Windows is **not supported** — `syscall.Setpgid` and `syscall.Kill` are Unix-only.

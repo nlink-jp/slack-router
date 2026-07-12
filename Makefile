@@ -5,8 +5,7 @@ BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 LDFLAGS := -X main.version=$(VERSION) \
            -X main.commit=$(COMMIT) \
-           -X main.buildDate=$(BUILD_DATE) \
-           -s -w
+           -X main.buildDate=$(BUILD_DATE)
 
 GO_BUILD := go build -trimpath -ldflags "$(LDFLAGS)"
 
@@ -24,10 +23,11 @@ NOTARY_PROFILE    ?= nlink-jp-notary
 # Adjust this list if you add more files worth shipping.
 # build-tools/ is intentionally NOT here — it holds the
 # codesign/notarize helpers, which are build-time only.
-BUNDLE_FILES := README.md CHANGELOG.md config.example.yaml .env.example docs scripts
+BUNDLE_FILES := README.md LICENSE CHANGELOG.md config.example.yaml .env.example docs scripts
 
+# darwin ships arm64 only (no amd64, no universal). linux keeps its matrix;
+# slack-router (a daemon) has no windows build.
 PLATFORMS := \
-	darwin/amd64 \
 	darwin/arm64 \
 	linux/amd64  \
 	linux/arm64
@@ -50,22 +50,24 @@ release: ## Cross-compile for all platforms, sign, package, notarize darwin → 
 		arch=$$(echo $$platform | cut -d/ -f2); \
 		name="$(BINARY)-$(VERSION)-$$os-$$arch"; \
 		stagedir="dist/$$name"; \
-		zipfile="dist/$$name.zip"; \
 		printf "  %-52s" "$$name ..."; \
 		mkdir -p "$$stagedir"; \
 		GOOS=$$os GOARCH=$$arch $(GO_BUILD) -o "$$stagedir/$(BINARY)" . \
 			|| { echo "FAILED"; rm -rf "$$stagedir"; exit 1; }; \
 		build-tools/codesign-darwin.sh "$$stagedir/$(BINARY)" "$(CODESIGN_IDENTITY)" || true; \
 		cp -r $(BUNDLE_FILES) "$$stagedir/"; \
-		cd dist && zip -qr "$$name.zip" "$$name/" && cd ..; \
+		if [ "$$os" = linux ]; then \
+			( cd dist && tar -czf "$$name.tar.gz" "$$name/" ); archive="dist/$$name.tar.gz"; \
+		else \
+			( cd dist && zip -qr "$$name.zip" "$$name/" ); archive="dist/$$name.zip"; \
+		fi; \
 		rm -rf "$$stagedir"; \
-		echo "ok  →  $$zipfile"; \
+		echo "ok  →  $$archive"; \
 	done
-	@build-tools/notarize-darwin.sh dist/$(BINARY)-$(VERSION)-darwin-amd64.zip "$(NOTARY_PROFILE)"
 	@build-tools/notarize-darwin.sh dist/$(BINARY)-$(VERSION)-darwin-arm64.zip "$(NOTARY_PROFILE)"
 	@echo ""
 	@echo "Artifacts:"
-	@ls -lh dist/*.zip
+	@ls -lh dist/*.zip dist/*.tar.gz 2>/dev/null
 
 .PHONY: package
 ## package: Alias for release — build all platforms and create .zip archives

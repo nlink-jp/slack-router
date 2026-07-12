@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-12
+
+### Removed
+
+- **darwin/amd64 (Intel) pre-built binary.** macOS releases now ship
+  **arm64 only**, per the org-wide policy (darwin is Apple-Silicon only; no
+  universal binaries). Intel Mac users can build from source.
+
+### Changed
+
+- **Linux release archives are now `.tar.gz`** (darwin remains `.zip`), per
+  `nlink-jp/.github` CONVENTIONS.md §Release Archive Standard. Each archive
+  still expands to a `slack-router-vX.Y.Z-<os>-<arch>/` directory bundling the
+  binary with `README.md`, `docs/`, the routed `scripts/`, and the config
+  examples (this daemon intentionally ships a self-contained bundle).
+- **`LICENSE` is now bundled** in every release archive.
+- **Dropped the `-s -w` linker strip flags** from `LDFLAGS`, aligning with the
+  org-standard build flags (slack-router has no Windows build, so this is
+  purely a consistency change).
+
+No change to the binary's behaviour — a packaging / build-config release.
+
 ## [0.2.1] - 2026-05-22
 
 ### Changed
