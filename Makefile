@@ -69,6 +69,22 @@ release: ## Cross-compile for all platforms, sign, package, notarize darwin → 
 	@echo "Artifacts:"
 	@ls -lh dist/*.zip dist/*.tar.gz 2>/dev/null
 
+.PHONY: verify-release
+verify-release: ## Refuse to release an un-notarized zip (marker gate)
+	@test -f "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip.notarized" || { \
+		echo "verify-release: FAIL — $(BINARY)-$(VERSION)-darwin-arm64.zip has no notarization marker."; \
+		echo "  make package must end with '[notarize] ...: Accepted'. Do not upload this zip."; \
+		exit 1; }
+	@test "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip.notarized" -nt "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip" || { \
+		echo "verify-release: FAIL — the zip was rebuilt after its marker (re-run make package)."; \
+		exit 1; }
+	@tmp=$$(mktemp -d) && \
+		unzip -oq "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip" -d "$$tmp" && \
+		"$$tmp/$(BINARY)-$(VERSION)-darwin-arm64/$(BINARY)" --version && \
+		spctl -a -vv -t install "$$tmp/$(BINARY)-$(VERSION)-darwin-arm64/$(BINARY)" 2>&1 | head -2 || true; \
+		rm -rf "$$tmp"
+	@echo "verify-release: OK ($(VERSION), notarization marker present)"
+
 .PHONY: package
 ## package: Alias for release — build all platforms and create .zip archives
 package: release
