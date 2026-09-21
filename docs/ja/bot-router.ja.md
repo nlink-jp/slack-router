@@ -137,8 +137,12 @@ slack-router/
 │       ├── main.go      ← slack-bot-router（将来実装）
 │       └── ...
 └── docs/
-    ├── slack-setup.md
-    └── bot-router.md    ← このファイル
+    ├── en/
+    │   ├── slack-setup.md
+    │   └── bot-router.md
+    └── ja/
+        ├── slack-setup.ja.md
+        └── bot-router.ja.md    ← このファイル
 ```
 
 `package main` を維持しつつ `cmd/` サブディレクトリで複数バイナリを管理する標準的な Go プロジェクト構成を採用する。

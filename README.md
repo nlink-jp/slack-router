@@ -80,7 +80,7 @@ routes:
     max_concurrency: 5
 ```
 
-For the full Slack App setup guide, see [docs/slack-setup.md](docs/slack-setup.md).
+For the full Slack App setup guide, see [docs/en/slack-setup.md](docs/en/slack-setup.md).
 
 ### Configuration reference
 

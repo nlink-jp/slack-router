@@ -34,7 +34,7 @@ Slack の Slash Command を Socket Mode で受け取り、設定ファイルの�
 **ソースからビルドする場合**
 - 上記に加えて Go 1.22 以上
 
-Slack App の設定手順は [docs/slack-setup.md](docs/slack-setup.md) を参照してください。
+Slack App の設定手順は [docs/ja/slack-setup.ja.md](docs/ja/slack-setup.ja.md) を参照してください。
 
 ---
 
