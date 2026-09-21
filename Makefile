@@ -78,12 +78,22 @@ verify-release: ## Refuse to release an un-notarized zip (marker gate)
 	@test "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip.notarized" -nt "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip" || { \
 		echo "verify-release: FAIL — the zip was rebuilt after its marker (re-run make package)."; \
 		exit 1; }
-	@tmp=$$(mktemp -d) && \
-		unzip -oq "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip" -d "$$tmp" && \
-		"$$tmp/$(BINARY)-$(VERSION)-darwin-arm64/$(BINARY)" --version && \
-		spctl -a -vv -t install "$$tmp/$(BINARY)-$(VERSION)-darwin-arm64/$(BINARY)" 2>&1 | head -2 || true; \
-		rm -rf "$$tmp"
-	@echo "verify-release: OK ($(VERSION), notarization marker present)"
+	@tmp=$$(mktemp -d); rc=0; \
+		if ! unzip -oq "dist/$(BINARY)-$(VERSION)-darwin-arm64.zip" -d "$$tmp"; then \
+			echo "verify-release: FAIL — the zip does not unpack. Do not upload it."; rc=1; \
+		elif ! out=$$("$$tmp/$(BINARY)-$(VERSION)-darwin-arm64/$(BINARY)" --version 2>&1); then \
+			echo "verify-release: FAIL — the packaged binary does not run:"; \
+			echo "  $$out"; rc=1; \
+		elif ! printf '%s\n' "$$out" | grep -qF "$(VERSION)"; then \
+			echo "verify-release: FAIL — the packaged binary reports \"$$out\", not $(VERSION)."; \
+			echo "  The zip holds a build from another tag (re-run make package)."; rc=1; \
+		else \
+			echo "  $$out"; \
+			spctl -a -vv -t install "$$tmp/$(BINARY)-$(VERSION)-darwin-arm64/$(BINARY)" 2>&1 | head -2 || true; \
+		fi; \
+		rm -rf "$$tmp"; \
+		exit $$rc
+	@echo "verify-release: OK ($(VERSION), notarized, unpacks, runs, reports its version)"
 
 .PHONY: package
 ## package: Alias for release — build all platforms and create .zip archives
