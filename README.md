@@ -128,6 +128,12 @@ Deny always takes precedence over allow. An empty allow list means "allow all".
 | Flag | Default | Description |
 |---|---|---|
 | `-config` | `config.yaml` | Path to config file |
+| `--version` | | Print the version, commit, and build date, then exit (no config file needed) |
+
+```bash
+$ ./slack-router --version
+slack-router v0.3.1 (commit abc1234, built 2026-09-23T00:00:00Z)
+```
 
 ### Worker scripts
 

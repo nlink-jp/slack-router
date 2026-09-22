@@ -255,6 +255,12 @@ curl -sSf -X POST "$response_url" \
 | フラグ | デフォルト | 説明 |
 |---|---|---|
 | `-config` | `config.yaml` | 設定ファイルのパス |
+| `--version` | | バージョン・コミット・ビルド日時を表示して終了（設定ファイル不要） |
+
+```bash
+$ ./slack-router --version
+slack-router v0.3.1 (commit abc1234, built 2026-09-23T00:00:00Z)
+```
 
 ### ログ出力例
 

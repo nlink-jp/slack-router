@@ -20,6 +20,7 @@ binary with no inbound port. All config lives in `config.yaml`.
 - All files are `package main` — there are no sub-packages
 - Use `slices.Contains` (stdlib since Go 1.21); do not write custom slice helpers
 - Use `log/slog` for all logging — no `fmt.Println`, no `log.Printf`
+  (the one plain-stdout line is `--version`'s output, which is not a log)
 
 ---
 
@@ -125,6 +126,12 @@ Do not add Windows back without resolving process group management.
 ### Version embedding
 Version is embedded at build time via `-ldflags`. The source of truth is `git describe --tags`.
 Do not hard-code version strings in Go source.
+
+`--version` prints `versionLine()` and exits before the config is loaded.
+`make verify-release` runs the packaged binary's `--version` and requires the tag
+in its output, so keep the flag, keep `main.version` as the `-X` target, and keep
+the version in that line. `TestVersionFlag` builds with the Makefile's `-X` flags
+and pins this.
 
 ---
 

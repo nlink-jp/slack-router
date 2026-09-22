@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`--version` flag** (also `-version`). Prints
+  `slack-router <version> (commit <commit>, built <date>)` and exits 0
+  without loading a config file. The binary previously had no such flag, so
+  `make verify-release` — which runs the packaged binary's `--version` and
+  requires the tag in its output — refused every real release with
+  "flag provided but not defined: -version".
+
 ### Fixed
 
 - **`make verify-release` now fails closed.** Its last block chained unzip, the

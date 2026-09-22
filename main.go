@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -21,9 +22,23 @@ var (
 	buildDate = "unknown"
 )
 
+// versionLine is what --version prints. It must contain the version injected
+// with -X main.version: make verify-release runs the packaged binary's
+// --version and refuses the release unless the tag appears in the output.
+func versionLine() string {
+	return fmt.Sprintf("slack-router %s (commit %s, built %s)", version, commit, buildDate)
+}
+
 func main() {
 	configPath := flag.String("config", "config.yaml", "path to config file")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	// Answered before the config is loaded, so it works with no config.yaml.
+	if *showVersion {
+		fmt.Println(versionLine())
+		return
+	}
 
 	cfg, err := LoadConfig(*configPath)
 	if err != nil {
