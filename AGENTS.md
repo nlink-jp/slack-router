@@ -113,7 +113,7 @@ make build    # current platform
 make test     # go test -race ./...
 make lint     # go vet + staticcheck
 make release  # cross-compile + zip → dist/
-make verify-release  # gate: .notarized marker + freshness (run before upload)
+make verify-release  # gate: notarized, fresh, runs at this version, clean linux archives (run before upload)
 ```
 
 ### Supported platforms

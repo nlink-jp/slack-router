@@ -57,7 +57,7 @@ release: ## Cross-compile for all platforms, sign, package, notarize darwin → 
 		build-tools/codesign-darwin.sh "$$stagedir/$(BINARY)" "$(CODESIGN_IDENTITY)" || true; \
 		cp -r $(BUNDLE_FILES) "$$stagedir/"; \
 		if [ "$$os" = linux ]; then \
-			( cd dist && tar -czf "$$name.tar.gz" "$$name/" ); archive="dist/$$name.tar.gz"; \
+			( cd dist && COPYFILE_DISABLE=1 tar --no-xattrs -czf "$$name.tar.gz" "$$name/" ); archive="dist/$$name.tar.gz"; \
 		else \
 			( cd dist && zip -qr "$$name.zip" "$$name/" ); archive="dist/$$name.zip"; \
 		fi; \
@@ -93,7 +93,28 @@ verify-release: ## Refuse to release an un-notarized zip (marker gate)
 		fi; \
 		rm -rf "$$tmp"; \
 		exit $$rc
-	@echo "verify-release: OK ($(VERSION), notarized, unpacks, runs, reports its version)"
+	@for platform in $(PLATFORMS); do \
+		os=$$(echo $$platform | cut -d/ -f1); \
+		arch=$$(echo $$platform | cut -d/ -f2); \
+		[ "$$os" = linux ] || continue; \
+		name="$(BINARY)-$(VERSION)-$$os-$$arch"; f="dist/$$name.tar.gz"; \
+		names=$$(tar --options 'tar:!mac-ext' -tzf "$$f") || { echo "verify-release: FAIL — $$f does not list."; exit 1; }; \
+		if printf '%s\n' "$$names" | grep -qE '(^|/)(\._|PaxHeader|__MACOSX)'; then \
+			echo "verify-release: FAIL — $$f carries macOS metadata entries."; \
+			echo "  macOS tar writes ._ members unless COPYFILE_DISABLE=1 is set, and lists them only with !mac-ext."; \
+			exit 1; fi; \
+		if gzip -dc "$$f" | grep -qa -e 'LIBARCHIVE.xattr' -e 'SCHILY.xattr'; then \
+			echo "verify-release: FAIL — $$f carries extended attributes as pax headers."; \
+			echo "  macOS tar writes them unless called with --no-xattrs; COPYFILE_DISABLE alone does not."; \
+			exit 1; fi; \
+		if printf '%s\n' "$$names" | grep -qvE "^$$name(/|$$)"; then \
+			echo "verify-release: FAIL — $$f holds entries outside $$name/."; exit 1; fi; \
+		got=$$(printf '%s\n' "$$names" | sed -E "s|^$$name/?||; s|/.*||" | grep -v '^$$' | LC_ALL=C sort -u | tr '\n' ' '); \
+		want=$$(printf '%s\n' "$(BINARY)" $(BUNDLE_FILES) | LC_ALL=C sort | tr '\n' ' '); \
+		if [ "$$got" != "$$want" ]; then \
+			echo "verify-release: FAIL — $$f holds $$got under $$name/; expected $$want"; exit 1; fi; \
+	done
+	@echo "verify-release: OK ($(VERSION), notarized, unpacks, runs, reports its version, clean linux archives)"
 
 .PHONY: package
 ## package: Alias for release — build all platforms and create .zip archives
