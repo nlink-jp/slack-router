@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal
+
+- The Linux-archive check in `make verify-release` reads each archive's pax
+  headers with Python's `tarfile` instead of grepping the decompressed stream,
+  which also matched file text that names the keywords (a bundled CHANGELOG,
+  for one).
+
 ## [0.4.0] - 2026-09-23
 
 ### Added
