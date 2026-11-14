@@ -147,7 +147,12 @@ test: ## Run tests with race detector
 .PHONY: lint
 lint: ## Run go vet and staticcheck
 	go vet ./...
-	@which staticcheck > /dev/null 2>&1 && staticcheck ./... || echo "staticcheck not installed (go install honnef.co/go/tools/cmd/staticcheck@latest)"
+	@# The two cases are judged apart. Chained as `which && staticcheck || echo`,
+	@# a failing staticcheck was reported as "not installed" and lint passed.
+	@command -v staticcheck > /dev/null 2>&1 || { \
+		echo "lint: FAIL — staticcheck is not installed (go install honnef.co/go/tools/cmd/staticcheck@latest)."; \
+		exit 1; }
+	staticcheck ./...
 
 .PHONY: tidy
 tidy: ## Tidy go modules

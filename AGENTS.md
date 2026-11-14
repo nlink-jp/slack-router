@@ -104,6 +104,9 @@ a non-zero code. If a script exits non-zero without responding, the user sees no
 - **`t.TempDir()`** for temp files — it cleans up automatically.
 - Run tests with: `make test` (`go test -race ./...`). The race detector is mandatory.
 - `staticcheck` runs as part of `make lint`. Fix all warnings before committing.
+  `make lint` fails when staticcheck fails or is not installed. A staticcheck built before the Go release in
+  use cannot read its export data and fails on every package ("export data version … is greater than maximum
+  supported"): reinstall it, do not work around the failure.
 
 ---
 

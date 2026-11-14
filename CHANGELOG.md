@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`make lint` fails when staticcheck fails, and when it is not installed.**
+  The recipe chained `which staticcheck && staticcheck ./... || echo "not
+  installed"`, so a staticcheck that failed was reported as missing and lint
+  passed. That is how it went unnoticed that the installed staticcheck could
+  no longer read the current Go's export data, and that the slack-go update
+  in v0.4.1 left a comparison that is always true (`RunContext` never returns
+  nil; the shutdown check now reads the context alone, with no change in
+  behaviour). A build-tooling fix: nothing in the released binary changes.
+
 ## [0.4.1] - 2026-11-14
 
 ### Security
