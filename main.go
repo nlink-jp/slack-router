@@ -122,7 +122,11 @@ func handleEvent(ctx context.Context, client *socketmode.Client, router *Router,
 		}
 
 		// ACK immediately — Slack requires a response within 3 seconds.
-		client.Ack(*evt.Request)
+		if err := client.Ack(*evt.Request); err != nil {
+			// The command still runs: the user sees Slack's timeout message,
+			// and the log says why.
+			slog.Warn("could not acknowledge the slash command", "command", cmd.Command, "err", err)
+		}
 
 		event := SlashEvent{
 			Command:     cmd.Command,
