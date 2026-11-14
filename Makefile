@@ -42,8 +42,16 @@ build: ## Build for the current platform
 	$(GO_BUILD) -o dist/$(BINARY) .
 	@build-tools/codesign-darwin.sh dist/$(BINARY) "$(CODESIGN_IDENTITY)"
 
+# Known vulnerabilities in the modules and the standard library this build
+# uses. `release` (and `package`, its alias) depends on it, so a release cannot
+# be built past a finding. It needs the network, and its database changes under
+# an unchanged tree: a finding can appear without a commit.
+.PHONY: vuln
+vuln: ## Run govulncheck over the build (release runs it first)
+	govulncheck ./...
+
 .PHONY: release
-release: ## Cross-compile for all platforms, sign, package, notarize darwin → dist/
+release: vuln ## Cross-compile for all platforms, sign, package, notarize darwin → dist/
 	@mkdir -p dist
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d/ -f1); \

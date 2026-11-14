@@ -15,7 +15,8 @@ binary with no inbound port. All config lives in `config.yaml`.
 
 ## Language and Toolchain
 
-- **Go 1.22** — do not use language features beyond Go 1.22
+- **Go 1.27.4 or later** (`go.mod`). The floor is a security floor, not a feature target: this daemon holds a
+  TLS connection to Slack on the standard library, so it is built with a release that has its fixes
 - **`go.mod` module**: `github.com/nlink-jp/slack-router`
 - All files are `package main` — there are no sub-packages
 - Use `slices.Contains` (stdlib since Go 1.21); do not write custom slice helpers
@@ -112,6 +113,7 @@ a non-zero code. If a script exits non-zero without responding, the user sees no
 make build    # current platform
 make test     # go test -race ./...
 make lint     # go vet + staticcheck
+make vuln     # govulncheck over the build; `make release` runs it first and stops on a finding
 make release  # cross-compile + zip → dist/
 make verify-release  # gate: notarized, fresh, runs at this version, clean linux archives (run before upload)
 ```
