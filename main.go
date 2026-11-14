@@ -92,8 +92,9 @@ func main() {
 		}
 	}()
 
-	// RunContext blocks until the context is cancelled or a fatal error occurs.
-	if err := smClient.RunContext(ctx); err != nil && ctx.Err() == nil {
+	// RunContext blocks until the context is cancelled or a fatal error occurs,
+	// and never returns nil: what tells a shutdown from a failure is the context.
+	if err := smClient.RunContext(ctx); ctx.Err() == nil {
 		slog.Error("socket mode error", "err", err)
 		os.Exit(1)
 	}
