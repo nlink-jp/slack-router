@@ -47,8 +47,15 @@ build: ## Build for the current platform
 # be built past a finding. It needs the network, and its database changes under
 # an unchanged tree: a finding can appear without a commit.
 .PHONY: vuln
-vuln: ## Run govulncheck over the build (release runs it first)
-	govulncheck ./...
+# Once per platform, with the environment `release` builds it with: an advisory
+# in an OS-only package shows only in that OS's build.
+vuln: ## Run govulncheck over each platform's build (release runs it first)
+	@for platform in $(PLATFORMS); do \
+		os=$$(echo $$platform | cut -d/ -f1); \
+		arch=$$(echo $$platform | cut -d/ -f2); \
+		echo "govulncheck $$os/$$arch"; \
+		GOOS=$$os GOARCH=$$arch govulncheck ./... || exit 1; \
+	done
 
 .PHONY: release
 release: vuln ## Cross-compile for all platforms, sign, package, notarize darwin → dist/
