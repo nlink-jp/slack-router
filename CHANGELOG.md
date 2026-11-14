@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-14
+
+### Security
+
+- **The binaries are built with Go 1.27.4, and `go.mod` now requires it** (it
+  was 1.22). slack-router holds a TLS connection to Slack on the standard
+  library, and the binaries of v0.4.0 were built with Go 1.27.1. Go 1.27.2
+  fixed two advisories in the HTTP/2 client (GO-2026-6610, -6611), which its
+  calls to the Slack Web API go through, and Go 1.27.3 one in certificate
+  verification (GO-2026-6809: intermediates known to be compromised were
+  still trusted).
+- **slack-go is updated from v0.15.0 to v0.23.1** (GO-2026-5410:
+  `SecretsVerifier` accepts an empty signing secret). slack-router does not
+  call it — it uses Socket Mode, which has no signing secret — and
+  `govulncheck` found the package imported, not the function called. The
+  update takes the affected code out of the build. The Socket Mode client
+  between those versions was read for what it changes here: it now refuses a
+  reply too large for the WebSocket, ignores a frame it cannot parse instead
+  of dropping the connection, and reports a failed acknowledgement. The new
+  version was exercised by the unit tests, not against a live workspace.
+
+### Changed
+
+- **A slash command that could not be acknowledged is logged**
+  (`could not acknowledge the slash command`). slack-go used to drop that
+  error; it now returns it. The command still runs.
+- **`make release` runs the vulnerability check first** (`make vuln`), so a
+  release cannot be built past a finding.
+
 ### Internal
 
 - The Linux-archive check in `make verify-release` reads each archive's pax
